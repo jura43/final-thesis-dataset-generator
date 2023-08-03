@@ -138,15 +138,16 @@ while True:
     print("Measuring response time...")
 
     urls = []
-    for i in range(0, instances):
-        #urls.append(grequests.get('https://google.com'))
-        #ip = ips[i]+':'+str(30000+i)
+    for i in range(0, instances): # Creating list of URLs for fetching website
         urls.append(grequests.get('http://'+ip+":"+str(30000+i)+"/shop"))
 
     try:
         res = grequests.map(urls)
         for i in range(instances):
-            pods[i][i]['response_time'] = res[i].elapsed.total_seconds()
+            if res[i].status_code == 200:
+                pods[i][i]['response_time'] = res[i].elapsed.total_seconds()
+            else:
+                pods[i][i]['response_time'] = -1
 
         # 5. Write CSV
         print("Writing data to CSV file...")
@@ -155,7 +156,8 @@ while True:
             writer = csv.DictWriter(csv_file, fieldnames=columns)
 
             for i in range(instances):
-                writer.writerow(pods[i][i])
+                if pods[i][i]['response_time'] != -1:
+                    writer.writerow(pods[i][i])
     
     except:
         print("Unable to mesure time")
