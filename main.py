@@ -99,11 +99,6 @@ while True:
     for n in v1core.list_node(label_selector="node=worker").items:
         if n.spec.unschedulable == None:
             nodes_info[n.metadata.name] = [n.status.allocatable['cpu'], n.status.allocatable['memory'][:-1][:-1], n.status.allocatable['pods']]
-            for status in n.status.conditions:
-                if status.type == "MemoryPressure":
-                    nodes_info[n.metadata.name].append(status.status)
-                if status.type == "DiskPressure":
-                    nodes_info[n.metadata.name].append(status.status)
                      
 
     resource = api_custom.list_cluster_custom_object(group="metrics.k8s.io",version="v1beta1", plural="nodes")
@@ -114,24 +109,18 @@ while True:
                 mem = int(n['usage']['memory'][:-1][:-1])/int(nodes_info[pods[i][i]['frontend']][1])
                 pods[i][i]['frontend_cpu_usage'] = round(cpu, 2)
                 pods[i][i]['frontend_memory_usage'] = round(mem,2)
-                pods[i][i]['frontend_memory_pressure'] = nodes_info[pods[i][i]['frontend']][3]
-                pods[i][i]['frontend_disk_pressure'] = nodes_info[pods[i][i]['frontend']][4]
 
             if n['metadata']['name'] == pods[i][i]['backend']:
                 cpu = (int(n['usage']['cpu'][:-1])/1000000)/(int(nodes_info[pods[i][i]['backend']][0])*1000)
                 mem = int(n['usage']['memory'][:-1][:-1])/int(nodes_info[pods[i][i]['backend']][1])
                 pods[i][i]['backend_cpu_usage'] = round(cpu, 2)
                 pods[i][i]['backend_memory_usage'] = round(mem, 2)
-                pods[i][i]['backend_memory_pressure'] = nodes_info[pods[i][i]['backend']][3]
-                pods[i][i]['backend_disk_pressure'] = nodes_info[pods[i][i]['backend']][4]
 
             if n['metadata']['name'] == pods[i][i]['database']:
                 cpu = (int(n['usage']['cpu'][:-1])/1000000)/(int(nodes_info[pods[i][i]['database']][0])*1000)
                 mem = int(n['usage']['memory'][:-1][:-1])/int(nodes_info[pods[i][i]['database']][1])
                 pods[i][i]['database_cpu_usage'] = round(cpu, 2)
                 pods[i][i]['database_memory_usage'] = round(mem, 2)
-                pods[i][i]['database_memory_pressure'] = nodes_info[pods[i][i]['database']][3]
-                pods[i][i]['database_disk_pressure'] = nodes_info[pods[i][i]['database']][4]
 
 
     # 4. Measure response time
