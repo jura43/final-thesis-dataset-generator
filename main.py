@@ -38,23 +38,36 @@ print(nodes)
 while True:
     # 1. Create deployment
     print("Creating "+ str(instances) + " deployments...")
-    for i in range(instances):
-        deployment_frontend = cd.create_deployment("frontend", "backend", i, 3000, node=nodes[random.randint(0, len(nodes)-1)])
-        deployment_backend = cd.create_deployment("backend", "database", i, 5000, node=nodes[random.randint(0, len(nodes)-1)])
-        deployment_database = cd.create_deployment("database", "none", i, 3306, node=nodes[random.randint(0, len(nodes)-1)])
-        service_frontend = cd.create_NodePort(i, 3000)
-        service_backend = cd.create_clusterIP("backend", i, 5000)
-        service_database = cd.create_clusterIP("database", i, 3306)
+    try:
+        for i in range(instances):
+            deployment_frontend = cd.create_deployment("frontend", "backend", i, 3000, node=nodes[random.randint(0, len(nodes)-1)])
+            deployment_backend = cd.create_deployment("backend", "database", i, 5000, node=nodes[random.randint(0, len(nodes)-1)])
+            deployment_database = cd.create_deployment("database", "none", i, 3306, node=nodes[random.randint(0, len(nodes)-1)])
+            service_frontend = cd.create_NodePort(i, 3000)
+            service_backend = cd.create_clusterIP("backend", i, 5000)
+            service_database = cd.create_clusterIP("database", i, 3306)
 
-        v1apps.create_namespaced_deployment(body=deployment_frontend, namespace="default")
-        v1apps.create_namespaced_deployment(body=deployment_backend, namespace="default")
-        v1apps.create_namespaced_deployment(body=deployment_database, namespace="default")
-        v1core.create_namespaced_service(body=service_frontend, namespace="default")
-        v1core.create_namespaced_service(body=service_backend, namespace="default")
-        v1core.create_namespaced_service(body=service_database, namespace="default")
-        
-    print("Done")
-    time.sleep(35)
+            v1apps.create_namespaced_deployment(body=deployment_frontend, namespace="default")
+            v1apps.create_namespaced_deployment(body=deployment_backend, namespace="default")
+            v1apps.create_namespaced_deployment(body=deployment_database, namespace="default")
+            v1core.create_namespaced_service(body=service_frontend, namespace="default")
+            v1core.create_namespaced_service(body=service_backend, namespace="default")
+            v1core.create_namespaced_service(body=service_database, namespace="default")
+            
+        print("Done")
+        time.sleep(35)
+    except:
+        print("Unable to create deployments, skipping...")
+        for i in range(0, instances):
+            v1apps.delete_namespaced_deployment(name="final-thesis-frontend-"+str(i), namespace="default")
+            v1apps.delete_namespaced_deployment(name="final-thesis-backend-"+str(i), namespace="default")
+            v1apps.delete_namespaced_deployment(name="final-thesis-database-"+str(i), namespace="default")
+            v1core.delete_namespaced_service(name="final-thesis-frontend-"+str(i), namespace="default")
+            v1core.delete_namespaced_service(name="final-thesis-backend-"+str(i), namespace="default")
+            v1core.delete_namespaced_service(name="final-thesis-database-"+str(i), namespace="default")
+        time.sleep(10)
+        break
+
 
     # 2. Get pods info
     pods = [] # [{0: {'backend': 'minikube-m03', 'database': 'minikube-m03', 'frontend': 'minikube-m02', 'response_time': 3.931251}}]
