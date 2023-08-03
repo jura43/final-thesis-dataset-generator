@@ -21,8 +21,12 @@ v1apps = client.AppsV1Api(ApiClient)
 v1core = client.CoreV1Api(ApiClient)
 api_custom = client.CustomObjectsApi(ApiClient)
 
-instances = 3 # Number of replicas to create
-ip = '192.168.21.130' # IP address of proxy to fetching created web site
+# Number of replicas to create
+instances = 3
+# IP address of proxy to fetching created web site
+ip = '192.168.21.130'
+# Time in seconds to wait after creating deployment
+wait = 25
 
 # 0. Get list of all worker nodes
 nodes = []
@@ -55,7 +59,7 @@ while True:
             v1core.create_namespaced_service(body=service_database, namespace="default")
             
         print("Done")
-        time.sleep(35)
+        time.sleep(wait)
     except:
         print("Unable to create deployments, skipping...")
         for i in range(0, instances):
