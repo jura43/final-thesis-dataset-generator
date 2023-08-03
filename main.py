@@ -22,6 +22,7 @@ v1core = client.CoreV1Api(ApiClient)
 api_custom = client.CustomObjectsApi(ApiClient)
 
 instances = 3 # Number of replicas to create
+ip = '192.168.21.130' # IP address of proxy to fetching created web site
 
 # 0. Get list of all worker nodes
 nodes = []
@@ -118,7 +119,7 @@ while True:
 
     # 4. Measure response time
     print("Measuring response time...")
-    ip = '192.168.21.130'
+
     urls = []
     for i in range(0, instances):
         #urls.append(grequests.get('https://google.com'))
