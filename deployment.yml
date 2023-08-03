@@ -1,0 +1,109 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: final-thesis-frontend
+spec:
+  selector:
+    matchLabels:
+      app: final-thesis-frontend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: final-thesis-frontend
+    spec:
+      containers:
+        - name: final-thesis-frontend
+          image: docker.io/jura43/final-thesis-frontend
+          env:
+            - name: hostname
+              value: final-thesis-backend
+          ports:
+            - containerPort: 3000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: final-thesis-backend
+spec:
+  selector:
+    matchLabels:
+      app: final-thesis-backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: final-thesis-backend
+    spec:
+      containers:
+        - name: final-thesis-backend
+          image: docker.io/jura43/final-thesis-backend
+          env:
+            - name: hostname
+              value: final-thesis-database
+          ports:
+            - containerPort: 5000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: final-thesis-database
+spec:
+  selector:
+    matchLabels:
+      app: final-thesis-database
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: final-thesis-database
+    spec:
+      containers:
+        - name: final-thesis-database
+          image: docker.io/jura43/final-thesis-database
+          ports:
+            - containerPort: 3306
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: final-thesis-frontend
+spec:
+  selector:
+    app: final-thesis-frontend
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: final-thesis-backend
+spec:
+  selector:
+    app: final-thesis-backend
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: final-thesis-database
+spec:
+  selector:
+    app: final-thesis-database
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
