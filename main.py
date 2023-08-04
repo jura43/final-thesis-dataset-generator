@@ -22,11 +22,11 @@ v1core = client.CoreV1Api(ApiClient)
 api_custom = client.CustomObjectsApi(ApiClient)
 
 # Number of replicas to create
-instances = 3
+instances = 1
 # IP address of proxy to fetching created web site
 ip = '192.168.21.130'
 # Time in seconds to wait after creating deployment
-wait = 25
+wait = 30
 
 # 0. Get list of all worker nodes
 nodes = []
@@ -76,12 +76,12 @@ while True:
     # 2. Get pods info
     pods = [] # [{0: {'backend': 'minikube-m03', 'database': 'minikube-m03', 'frontend': 'minikube-m02', 'response_time': 3.931251}}]
     ips = []
-    ret = v1core.list_pod_for_all_namespaces(watch=False, label_selector="number")
+    ret = v1core.list_namespaced_pod("default", watch=False)
 
     for i in range(0, instances):
         entry = {i: {}}
         for p in ret.items:
-            if p.metadata.labels['number'] == str(i):
+            if 'number' in p.metadata.labels and p.metadata.labels['number'] == str(i):
                 entry[i][p.metadata.labels['side']] = p.spec.node_name
                 if p.metadata.labels['side'] == 'frontend':
                     entry[i]['frontend_ssd'] = ssd[p.spec.node_name]
@@ -92,6 +92,19 @@ while True:
         
             ips.append(p.status.host_ip)
         pods.append(entry)
+
+    # Counting number of pods on a node
+    pods_on_node = {}
+
+    for i in nodes:
+        pod = 0
+        for p in ret.items:
+            if p.spec.node_name == i:
+                pod += 1
+
+        pods_on_node[i] = pod
+
+        
         
     # 3. Get nodes resource usage
     nodes_info = {} # Nodes allocatable CPU, Memory and number of Pods, MemoryPressure, DiskPressure
@@ -109,18 +122,21 @@ while True:
                 mem = int(n['usage']['memory'][:-1][:-1])/int(nodes_info[pods[i][i]['frontend']][1])
                 pods[i][i]['frontend_cpu_usage'] = round(cpu, 2)
                 pods[i][i]['frontend_memory_usage'] = round(mem,2)
+                pods[i][i]['frontend_pods'] = pods_on_node[pods[i][i]['frontend']]
 
             if n['metadata']['name'] == pods[i][i]['backend']:
                 cpu = (int(n['usage']['cpu'][:-1])/1000000)/(int(nodes_info[pods[i][i]['backend']][0])*1000)
                 mem = int(n['usage']['memory'][:-1][:-1])/int(nodes_info[pods[i][i]['backend']][1])
                 pods[i][i]['backend_cpu_usage'] = round(cpu, 2)
                 pods[i][i]['backend_memory_usage'] = round(mem, 2)
+                pods[i][i]['backend_pods'] = pods_on_node[pods[i][i]['backend']]
 
             if n['metadata']['name'] == pods[i][i]['database']:
                 cpu = (int(n['usage']['cpu'][:-1])/1000000)/(int(nodes_info[pods[i][i]['database']][0])*1000)
                 mem = int(n['usage']['memory'][:-1][:-1])/int(nodes_info[pods[i][i]['database']][1])
                 pods[i][i]['database_cpu_usage'] = round(cpu, 2)
                 pods[i][i]['database_memory_usage'] = round(mem, 2)
+                pods[i][i]['database_pods'] = pods_on_node[pods[i][i]['database']]
 
 
     # 4. Measure response time
@@ -141,7 +157,7 @@ while True:
         # 5. Write CSV
         print("Writing data to CSV file...")
         with open('data.csv', 'a') as csv_file:
-            columns = ['frontend', 'backend', 'database', 'response_time', 'frontend_cpu_usage', 'frontend_memory_usage', 'frontend_memory_pressure', 'frontend_disk_pressure', 'frontend_ssd', 'backend_cpu_usage', 'backend_memory_usage', 'backend_memory_pressure', 'backend_disk_pressure', 'backend_ssd', 'database_cpu_usage', 'database_memory_usage', 'database_memory_pressure', 'database_disk_pressure', 'database_ssd']
+            columns = ['frontend', 'backend', 'database', 'response_time', 'frontend_cpu_usage', 'frontend_memory_usage', 'frontend_pods', 'frontend_ssd', 'backend_cpu_usage', 'backend_memory_usage', 'backend_pods', 'backend_ssd', 'database_cpu_usage', 'database_memory_usage', 'database_pods', 'database_ssd']
             writer = csv.DictWriter(csv_file, fieldnames=columns)
 
             for i in range(instances):

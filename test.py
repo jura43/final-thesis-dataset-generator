@@ -16,3 +16,8 @@ print(resource)
 
 for stats in resource['items']:
     print("Node Name: %s\tCPU: %s\tMemory: %s" % (stats['metadata']['name'], stats['usage']['cpu'], stats['usage']['memory']))
+
+ret = v1core.list_namespaced_pod("default", watch=False)
+for i in ret.items:
+    if i.metadata.labels['app'] == 'final-thesis-frontend':
+        print(i.spec.node_name)
