@@ -23,11 +23,11 @@ v1core = client.CoreV1Api(ApiClient)
 api_custom = client.CustomObjectsApi(ApiClient)
 
 # Number of replicas to create
-instances = os.environ['instances']
+instances = int(os.environ['INSTANCES'])
 # IP address of proxy to fetching created web site
 ip = '192.168.21.130'
 # Time in seconds to wait after creating deployment
-wait = os.environ['wait_seconds']
+wait = int(os.environ['WAIT_SECONDS'])
 
 # 0. Get list of all worker nodes
 nodes = []
@@ -63,12 +63,14 @@ while True:
     except:
         print("Unable to create deployments, skipping...")
         ret = v1apps.list_namespaced_deployment("default", watch=False, label_selector="number")
-        for p in ret:
-            v1apps.delete_namespaced_deployment(name=p.metadata.name, namespace="default")
+        if ret:
+            for p in ret:
+                v1apps.delete_namespaced_deployment(name=p.metadata.name, namespace="default")
 
         ret = v1core.list_namespaced_service("default", watch=False)
-        for s in ret:
-            v1core.delete_namespaced_service(name=s.metadata.name, namespace="default")
+        if ret:
+            for s in ret:
+                v1core.delete_namespaced_service(name=s.metadata.name, namespace="default")
         time.sleep(10)
         continue
 
