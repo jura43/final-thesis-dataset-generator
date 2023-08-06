@@ -35,7 +35,7 @@ for n in v1core.list_node(label_selector="node=worker").items:
     if n.spec.unschedulable == None:
         for status in n.status.conditions:
             if status.status == "True" and status.type == "Ready":
-                nodes.append(n.metadata.name)       
+                nodes.append(n.metadata.name)
 
 print("Nodes:")
 print(nodes)
@@ -59,17 +59,17 @@ while True:
             v1core.create_namespaced_service(body=service_backend, namespace="default")
             v1core.create_namespaced_service(body=service_database, namespace="default")
         print("Done")
-        
+
     except:
         print("Unable to create deployments, skipping...")
         ret = v1apps.list_namespaced_deployment("default", watch=False, label_selector="number")
-        if ret:
-            for p in ret:
+        if ret.items:
+            for p in ret.items:
                 v1apps.delete_namespaced_deployment(name=p.metadata.name, namespace="default")
 
-        ret = v1core.list_namespaced_service("default", watch=False)
-        if ret:
-            for s in ret:
+        ret = v1core.list_namespaced_service("default", watch=False, label_selector="number")
+        if ret.items:
+            for s in ret.items:
                 v1core.delete_namespaced_service(name=s.metadata.name, namespace="default")
         time.sleep(10)
         continue
@@ -165,7 +165,7 @@ while True:
             for i in range(instances):
                 if pods[i][i]['response_time'] != -1:
                     writer.writerow(pods[i][i])
-    
+
     except:
         print("Unable to mesure time")
 
