@@ -29,7 +29,7 @@ def create_deployment(side, connect_to, number, port, node):
     deployment = client.V1Deployment(
         api_version="apps/v1",
         kind="Deployment",
-        metadata=client.V1ObjectMeta(name="final-thesis-"+side+"-"+str(number), labels={"number": number, "side": side}),
+        metadata=client.V1ObjectMeta(name="final-thesis-"+side+"-"+str(number), labels={"number": str(number), "side": side}),
         spec=spec
     )
 
@@ -47,7 +47,7 @@ def create_clusterIP(side, number, port):
         selector={"app": "final-thesis-"+side+"-"+str(number)},
         type="ClusterIP"
     )
-    metadata=client.V1ObjectMeta(name="final-thesis-"+side+"-"+str(number), labels={"number": number, "side": side})
+    metadata=client.V1ObjectMeta(name="final-thesis-"+side+"-"+str(number), labels={"number": str(number), "side": side})
     service=client.V1Service(api_version="v1", kind="Service", metadata=metadata, spec=spec)
 
     return service
@@ -63,7 +63,7 @@ def create_NodePort(number, port):
         selector={"app": "final-thesis-frontend-"+str(number)},
         type="NodePort"
     )
-    metadata=client.V1ObjectMeta(name="final-thesis-frontend-"+str(number), labels={"number": number, "side": "frontend"})
+    metadata=client.V1ObjectMeta(name="final-thesis-frontend-"+str(number), labels={"number": str(number), "side": "frontend"})
     service=client.V1Service(api_version="v1", kind="Service", metadata=metadata, spec=spec)
 
     return service
