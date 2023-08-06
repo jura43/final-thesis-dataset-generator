@@ -57,22 +57,21 @@ while True:
             v1core.create_namespaced_service(body=service_frontend, namespace="default")
             v1core.create_namespaced_service(body=service_backend, namespace="default")
             v1core.create_namespaced_service(body=service_database, namespace="default")
-            
         print("Done")
-        time.sleep(wait)
+        
     except:
         print("Unable to create deployments, skipping...")
-        for i in range(0, instances):
-            v1apps.delete_namespaced_deployment(name="final-thesis-frontend-"+str(i), namespace="default")
-            v1apps.delete_namespaced_deployment(name="final-thesis-backend-"+str(i), namespace="default")
-            v1apps.delete_namespaced_deployment(name="final-thesis-database-"+str(i), namespace="default")
-            v1core.delete_namespaced_service(name="final-thesis-frontend-"+str(i), namespace="default")
-            v1core.delete_namespaced_service(name="final-thesis-backend-"+str(i), namespace="default")
-            v1core.delete_namespaced_service(name="final-thesis-database-"+str(i), namespace="default")
+        ret = v1apps.list_namespaced_deployment("default", watch=False, label_selector="number")
+        for p in ret:
+            v1apps.delete_namespaced_deployment(name=p.metadata.name, namespace="default")
+
+        ret = v1core.list_namespaced_service("default", watch=False)
+        for s in ret:
+            v1core.delete_namespaced_service(name=s.metadata.name, namespace="default")
         time.sleep(10)
-        break
+        continue
 
-
+    time.sleep(wait)
     # 2. Get pods info
     pods = [] # [{0: {'backend': 'minikube-m03', 'database': 'minikube-m03', 'frontend': 'minikube-m02', 'response_time': 3.931251}}]
     ips = []
