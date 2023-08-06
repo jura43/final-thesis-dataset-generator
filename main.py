@@ -1,3 +1,4 @@
+import os
 import csv
 import json
 import grequests
@@ -22,11 +23,11 @@ v1core = client.CoreV1Api(ApiClient)
 api_custom = client.CustomObjectsApi(ApiClient)
 
 # Number of replicas to create
-instances = 1
+instances = os.environ['instances']
 # IP address of proxy to fetching created web site
 ip = '192.168.21.130'
 # Time in seconds to wait after creating deployment
-wait = 30
+wait = os.environ['wait_seconds']
 
 # 0. Get list of all worker nodes
 nodes = []
