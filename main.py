@@ -42,7 +42,7 @@ print(nodes)
 
 while True:
     # 1. Create deployment
-    print("Creating "+ str(instances) + " deployments...")
+    print("[INFO] Creating "+ str(instances) + " deployments...")
     try:
         for i in range(instances):
             deployment_frontend = cd.create_deployment("frontend", "backend", i, 3000, node=nodes[random.randint(0, len(nodes)-1)])
@@ -61,15 +61,17 @@ while True:
         print("Done")
 
     except:
-        print("Unable to create deployments, skipping...")
+        print("[ERROR] Unable to create deployments, skipping...")
         ret = v1apps.list_namespaced_deployment("default", watch=False, label_selector="number")
         if ret.items:
             for p in ret.items:
+                print("[INFO] Deleting deployment" + s.metadata.name)
                 v1apps.delete_namespaced_deployment(name=p.metadata.name, namespace="default")
 
         ret = v1core.list_namespaced_service("default", watch=False, label_selector="number")
         if ret.items:
             for s in ret.items:
+                print("[INFO] Deleting service "+ s.metadata.name)
                 v1core.delete_namespaced_service(name=s.metadata.name, namespace="default")
         time.sleep(10)
         continue
@@ -142,7 +144,7 @@ while True:
 
 
     # 4. Measure response time
-    print("Measuring response time...")
+    print("[INFO] Measuring response time...")
 
     urls = []
     for i in range(0, instances): # Creating list of URLs for fetching website
@@ -151,13 +153,14 @@ while True:
     try:
         res = grequests.map(urls)
         for i in range(instances):
+            print(res[i].status_code)
             if res[i].status_code == 200:
                 pods[i][i]['response_time'] = res[i].elapsed.total_seconds()
             else:
                 pods[i][i]['response_time'] = -1
 
         # 5. Write CSV
-        print("Writing data to CSV file...")
+        print("[INFO] Writing data to CSV file...")
         with open('data.csv', 'a') as csv_file:
             columns = ['frontend', 'backend', 'database', 'response_time', 'frontend_cpu_usage', 'frontend_memory_usage', 'frontend_pods', 'frontend_ssd', 'backend_cpu_usage', 'backend_memory_usage', 'backend_pods', 'backend_ssd', 'database_cpu_usage', 'database_memory_usage', 'database_pods', 'database_ssd']
             writer = csv.DictWriter(csv_file, fieldnames=columns)
@@ -167,10 +170,10 @@ while True:
                     writer.writerow(pods[i][i])
 
     except:
-        print("Unable to mesure time")
+        print("[ERROR] Unable to mesure time")
 
     # 6. Delete deployment
-    print("Deleting "+ str(instances) + " deployments...")
+    print("[INFO] Deleting "+ str(instances) + " deployments...")
     for i in range(0, instances):
         v1apps.delete_namespaced_deployment(name="final-thesis-frontend-"+str(i), namespace="default")
         v1apps.delete_namespaced_deployment(name="final-thesis-backend-"+str(i), namespace="default")
